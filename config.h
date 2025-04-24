@@ -19,7 +19,7 @@
 // Define blocks for the status feed as X(icon, cmd, interval, signal).
 #define BLOCKS(X)                  \
     X("", "bar-network", 5,    0)  \
-    X("", "bar-sound",   1800, 32) \
+    X("", "bar-sound",   1800, 10) \
     X("", "bar-battery", 5,    0)  \
     X("", "bar-date",    1,    0)
 
