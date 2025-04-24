@@ -6,5 +6,6 @@ pkgs.mkShell {
     pkg-config
     xorg.libxcb
     xorg.xcbproto
+    xorg.xcbutil
   ];
 }
