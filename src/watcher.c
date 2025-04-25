@@ -12,8 +12,7 @@ static bool watcher_fd_is_readable(const watcher_fd* const watcher_fd) {
     return (watcher_fd->revents & POLLIN) != 0;
 }
 
-int watcher_init(watcher* const watcher, const block* const blocks,
-                 const unsigned short block_count, const int signal_fd) {
+int watcher_init(watcher* const watcher, block_arr blocks, const int signal_fd) {
     if (signal_fd == -1) {
         (void)fprintf(
             stderr,
@@ -25,8 +24,8 @@ int watcher_init(watcher* const watcher, const block* const blocks,
     fd->fd = signal_fd;
     fd->events = POLLIN;
 
-    for (unsigned short i = 0; i < block_count; ++i) {
-        const int block_fd = blocks[i].pipe[READ_END];
+    for (unsigned short i = 0; i < blocks.length; ++i) {
+        const int block_fd = blocks.values[i].pipe[READ_END];
         if (block_fd == -1) {
             (void)fprintf(
                 stderr,

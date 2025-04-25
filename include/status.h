@@ -19,11 +19,10 @@ typedef struct {
     char previous[STATUS_LENGTH];
 #undef STATUS_LENGTH
 
-    const block* const blocks;
-    const unsigned short block_count;
+    block_arr blocks;
 } status;
 
-status status_new(const block* const blocks, const unsigned short block_count);
+status status_new(block_arr blocks);
 bool status_update(status* const status);
 int status_write(const status* const status, const bool is_debug_mode,
                  x11_connection* const connection);

@@ -21,8 +21,7 @@ typedef struct {
     bool got_signal;
 } watcher;
 
-int watcher_init(watcher *const watcher, const block *const blocks,
-                 const unsigned short block_count, const int signal_fd);
+int watcher_init(watcher *const watcher, block_arr blocks, const int signal_fd);
 int watcher_poll(watcher *const watcher, const int timeout_ms);
 
 #endif  // WATCHER_H

@@ -14,91 +14,61 @@
 #include "watcher.h"
 #include "x11.h"
 
-static int init_blocks(block *const blocks, const unsigned short block_count) {
-    for (unsigned short i = 0; i < block_count; ++i) {
-        block *const block = &blocks[i];
-        if (block_init(block) != 0) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-static int deinit_blocks(block *const blocks,
-                         const unsigned short block_count) {
-    for (unsigned short i = 0; i < block_count; ++i) {
-        block *const block = &blocks[i];
-        if (block_deinit(block) != 0) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-static int execute_blocks(block *const blocks,
-                          const unsigned short block_count,
-                          const timer *const timer) {
-    for (unsigned short i = 0; i < block_count; ++i) {
-        block *const block = &blocks[i];
+static int execute_blocks(block_arr blocks, const timer *const timer) {
+    for (unsigned short i = 0; i < blocks.length; ++i) {
+        block *const block = &blocks.values[i];
         if (!timer_must_run_block(timer, block)) {
             continue;
         }
-
-        if (block_execute(&blocks[i], 0) != 0) {
+        if (block_execute(block, 0) != 0) {
             return 1;
         }
     }
-
     return 0;
 }
 
-static int trigger_event(block *const blocks, const unsigned short block_count,
-                         timer *const timer) {
-    if (execute_blocks(blocks, block_count, timer) != 0) {
+static int trigger_event(block_arr blocks, timer *const timer) {
+    if (execute_blocks(blocks, timer) != 0) {
         return 1;
     }
-
     if (timer_arm(timer) != 0) {
         return 1;
     }
-
     return 0;
 }
 
-static int refresh_callback(block *const blocks,
-                            const unsigned short block_count) {
-    if (execute_blocks(blocks, block_count, NULL) != 0) {
+static int refresh_callback(block_arr blocks) {
+    if (execute_blocks(blocks, NULL) != 0) {
         return 1;
     }
-
     return 0;
 }
 
-static int event_loop(block *const blocks, const unsigned short block_count,
+static int event_loop(block_arr blocks,
                       const bool is_debug_mode,
                       x11_connection *const connection,
                       signal_handler *const signal_handler) {
-    timer timer = timer_new(blocks, block_count);
+    timer timer = timer_new(blocks);
 
     // Kickstart the event loop with an initial execution.
-    if (trigger_event(blocks, block_count, &timer) != 0) {
+    if (trigger_event(blocks, &timer) != 0) {
         return 1;
     }
 
+    // add unix socket fd
     watcher watcher;
-    if (watcher_init(&watcher, blocks, block_count, signal_handler->fd) != 0) {
+    if (watcher_init(&watcher, blocks, signal_handler->fd) != 0) {
         return 1;
     }
 
-    status status = status_new(blocks, block_count);
+    status status = status_new(blocks);
     bool is_alive = true;
     while (is_alive) {
         if (watcher_poll(&watcher, -1) != 0) {
             return 1;
         }
 
+        // if watcher.will_exit { exit }
         if (watcher.got_signal) {
             is_alive = signal_handler_process(signal_handler, &timer) == 0;
         }
@@ -130,25 +100,30 @@ int main(const int argc, const char *const argv[]) {
 
 #define BLOCK(icon, command, interval, signal) \
     block_new(icon, command, interval, signal),
-    block blocks[BLOCK_COUNT] = {BLOCKS(BLOCK)};
+    block block_values[BLOCK_COUNT] = {BLOCKS(BLOCK)};
 #undef BLOCK
-    const unsigned short block_count = LEN(blocks);
 
+    block_arr blocks = {
+        .values = block_values,
+        .length = LEN(block_values)
+    };
     int status = 0;
-    if (init_blocks(blocks, block_count) != 0) {
+    if (block_arr_init(blocks) != 0) {
         status = 1;
         goto x11_close;
     }
 
     signal_handler signal_handler = signal_handler_new(
-        blocks, block_count, refresh_callback, trigger_event);
+        blocks,
+        refresh_callback,
+        trigger_event
+    );
     if (signal_handler_init(&signal_handler) != 0) {
         status = 1;
         goto deinit_blocks;
     }
 
-    if (event_loop(blocks, block_count, cli_args.is_debug_mode, connection,
-                   &signal_handler) != 0) {
+    if (event_loop(blocks, cli_args.is_debug_mode, connection, &signal_handler) != 0) {
         status = 1;
     }
 
@@ -157,7 +132,7 @@ int main(const int argc, const char *const argv[]) {
     }
 
 deinit_blocks:
-    if (deinit_blocks(blocks, block_count) != 0) {
+    if (block_arr_deinit(blocks) != 0) {
         status = 1;
     }
 

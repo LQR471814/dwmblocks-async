@@ -145,3 +145,24 @@ int block_update(block *const block) {
 
     return 0;
 }
+
+int block_arr_init(block_arr blocks) {
+    for (unsigned short i = 0; i < blocks.length; ++i) {
+        block *const block = &blocks.values[i];
+        if (block_init(block) != 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int block_arr_deinit(block_arr blocks) {
+    for (unsigned short i = 0; i < blocks.length; ++i) {
+        block *const block = &blocks.values[i];
+        if (block_deinit(block) != 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+

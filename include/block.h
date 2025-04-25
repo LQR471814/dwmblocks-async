@@ -26,4 +26,12 @@ int block_deinit(block *const block);
 int block_execute(block *const block, const uint8_t button);
 int block_update(block *const block);
 
+typedef struct {
+    block *const values;
+    const unsigned short length;
+} block_arr;
+
+int block_arr_init(block_arr blocks);
+int block_arr_deinit(block_arr blocks);
+
 #endif  // BLOCK_H
