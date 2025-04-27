@@ -20,9 +20,9 @@
 // Note: event_id with a value of 0 would indicate that the block should
 // not receive any events.
 #define BLOCKS(X)                  \
-    X("", "bar-network", 5,    0)  \
+    X("", "bar-network", 5,    2)  \
     X("", "bar-sound",   1800, 1)  \
-    X("", "bar-battery", 5,    0)  \
+    X("", "bar-battery", 5,    3)  \
     X("", "bar-date",    1,    0)
 
 #endif  // CONFIG_H
