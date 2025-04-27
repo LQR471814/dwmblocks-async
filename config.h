@@ -17,12 +17,13 @@
 #define TRAILING_DELIMITER 0
 
 // Define blocks for the status feed as X(icon, cmd, interval, event_id).
-// Note: event_id with a value of 0 would indicate that the block should
-// not receive any events.
+// Note: An event_id=0 would indicate that the block should not receive any
+// events. Similarly an interval=0, indicates that the block should never be
+// refreshed by the timer.
 #define BLOCKS(X)                  \
-    X("", "bar-network", 5,    2)  \
-    X("", "bar-sound",   1800, 1)  \
-    X("", "bar-battery", 5,    3)  \
+    X("", "bar-network", 0,    2)  \
+    X("", "bar-sound",   0,    1)  \
+    X("", "bar-battery", 0,    3)  \
     X("", "bar-date",    1,    0)
 
 #endif  // CONFIG_H
