@@ -16,7 +16,7 @@
 // Control whether a trailing delimiter should be appended to the status.
 #define TRAILING_DELIMITER 0
 
-// Define blocks for the status feed as X(icon, cmd, interval, signal).
+// Define blocks for the status feed as X(icon, cmd, interval, event_id).
 #define BLOCKS(X)                  \
     X("", "bar-network", 5,    0)  \
     X("", "bar-sound",   1800, 1) \

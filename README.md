@@ -16,12 +16,13 @@ design, so it is always responsive. Imagine `i3blocks`, but for `dwm`.
   - [Updates can be externally triggered](#signalling-changes)
 - Compatible with `i3blocks` scripts
 
-> Additionally, this build of `dwmblocks` is more optimized and fixes the
-> flickering of the status bar when scrolling.
+> Additionally, this build of `dwmblocks` is more optimized and
+> fixes the flickering of the status bar when scrolling.
 
 ## Why `dwmblocks`?
 
-In `dwm`, you have to set the status bar through an infinite loop, like so:
+In `dwm`, you have to set the status bar through an infinite loop,
+like so:
 
 ```sh
 while :; do
@@ -30,9 +31,9 @@ while :; do
 done
 ```
 
-This is inefficient when running multiple commands that need to be updated at
-different frequencies. For example, to display an unread mail count and a clock
-in the status bar:
+This is inefficient when running multiple commands that need to be
+updated at different frequencies. For example, to display an
+unread mail count and a clock in the status bar:
 
 ```sh
 while :; do
@@ -41,30 +42,32 @@ while :; do
 done
 ```
 
-Both are executed at the same rate, which is wasteful. Ideally, the mail
-counter would be updated every thirty minutes, since there's a limit to the
-number of requests I can make using Gmail's APIs (as a free user).
+Both are executed at the same rate, which is wasteful. Ideally,
+the mail counter would be updated every thirty minutes, since
+there's a limit to the number of requests I can make using Gmail's
+APIs (as a free user).
 
-`dwmblocks` allows you to divide the status bar into multiple blocks, each of
-which can be updated at its own interval. This effectively addresses the
-previous issue, because the commands in a block are only executed once within
-that time frame.
+`dwmblocks` allows you to divide the status bar into multiple
+blocks, each of which can be updated at its own interval. This
+effectively addresses the previous issue, because the commands in
+a block are only executed once within that time frame.
 
 ## Why `dwmblocks-async`?
 
-The magic of `dwmblocks-async` is in the `async` part. Since vanilla
-`dwmblocks` executes the commands of each block sequentially, it leads to
-annoying freezes. In cases where one block takes several seconds to execute,
-like in the mail and date blocks example from above, the delay is clearly
-visible. Fire up a new instance of `dwmblocks` and you'll see!
+The magic of `dwmblocks-async` is in the `async` part. Since
+vanilla `dwmblocks` executes the commands of each block
+sequentially, it leads to annoying freezes. In cases where one
+block takes several seconds to execute, like in the mail and date
+blocks example from above, the delay is clearly visible. Fire up a
+new instance of `dwmblocks` and you'll see!
 
-With `dwmblocks-async`, the computer executes each block asynchronously
-(simultaneously).
+With `dwmblocks-async`, the computer executes each block
+asynchronously (simultaneously).
 
 ## Installation
 
-Clone this repository, modify `config.h` appropriately, then compile the
-program:
+Clone this repository, modify `config.h` appropriately, then
+compile the program:
 
 ```sh
 git clone https://github.com/UtkarshVerma/dwmblocks-async.git
@@ -75,8 +78,9 @@ sudo make install
 
 ## Usage
 
-To set `dwmblocks-async` as your status bar, you need to run it as a background
-process on startup. One way is to add the following to `~/.xinitrc`:
+To set `dwmblocks-async` as your status bar, you need to run it as
+a background process on startup. One way is to add the following
+to `~/.xinitrc`:
 
 ```sh
 # The binary of `dwmblocks-async` is named `dwmblocks`
@@ -104,7 +108,8 @@ Each block has the following properties:
 | Update interval | Time in seconds, after which you want the block to update. If `0`, the block will never be updated.                                                |
 | Update signal   | Signal to be used for triggering the block. Must be a positive integer. If `0`, a signal won't be set up for the block and it will be unclickable. |
 
-Apart from defining the blocks, features can be toggled through `config.h`:
+Apart from defining the blocks, features can be toggled through
+`config.h`:
 
 ```c
 // String used to delimit block outputs in the status.
@@ -125,30 +130,43 @@ Apart from defining the blocks, features can be toggled through `config.h`:
 
 ### Signalling changes
 
-Most status bars constantly rerun all scripts every few seconds. This is an
-option here, but a superior choice is to give your block a signal through which
-you can indicate it to update on relevant event, rather than have it rerun
-idly.
+Most status bars constantly rerun all scripts every few seconds.
+This is an option here, but a superior choice is to give your
+block a "signal" through which you can indicate it to update on
+relevant event, rather than have it rerun idly.
 
-For example, the volume block has the update signal `5` by default. I run
-`kill -39 $(pidof dwmblocks)` alongside my volume shortcuts in `dwm` to only
-update it when relevant. Just add `34` to your signal number! You could also
-run `pkill -RTMIN+5 dwmblocks`, but it's slower.
+> [!NOTE]
+> The way signals are implemented in this fork of
+> `dwmblocks-async` are with unix sockets in contrast to the
+> actual system signals used in the original `dwmblocks-async`.
+>
+> This is because if you were to run `dwmblocks-async` in a
+> systemd service, it would interpret any signal sent to the
+> service as a kill signal, there is no way around this except to
+> avoid sending system signals to systemd service.
 
-To refresh all the blocks, run `kill -10 $(pidof dwmblocks)` or
-`pkill -SIGUSR1 dwmblocks`.
+For example, the volume block has the update signal of `1`. I run 
 
-> All blocks must have different signal numbers!
+```sh
+echo "\x01" | socat -u - UNIX-SENDTO:/tmp/dwmblocks
+```
+
+alongside the script to change the volume to send a datagram unix
+socket packet with a single byte (the number `1`) in it to
+`/tmp/dwmblocks`.
+
+This will tell `dwmblocks-async` (which is listening on that
+path), to refresh all blocks with `event_id` field `1`.
 
 ### Clickable blocks
 
-Like `i3blocks`, this build allows you to build in additional actions into your
-scripts in response to click events. You can check out
-[my status bar scripts](https://github.com/UtkarshVerma/dotfiles/tree/main/.local/bin/statusbar)
+Like `i3blocks`, this build allows you to build in additional
+actions into your scripts in response to click events. You can
+check out [my status bar scripts](https://github.com/UtkarshVerma/dotfiles/tree/main/.local/bin/statusbar)
 as references for using the `$BLOCK_BUTTON` variable.
 
-To use this feature, define the `CLICKABLE_BLOCKS` feature macro in your
-`config.h`:
+To use this feature, define the `CLICKABLE_BLOCKS` feature macro
+in your `config.h`:
 
 ```c
 #define CLICKABLE_BLOCKS 1
