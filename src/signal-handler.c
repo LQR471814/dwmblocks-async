@@ -1,25 +1,18 @@
 #include "signal-handler.h"
 
 #include <signal.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <sys/signalfd.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "block.h"
-#include "main.h"
 #include "timer.h"
 
 typedef struct signalfd_siginfo signal_info;
 
-signal_handler signal_handler_new(
-    block_arr blocks,
-    const signal_refresh_callback refresh_callback,
-    const signal_timer_callback timer_callback) {
+signal_handler signal_handler_new(block_arr blocks) {
     signal_handler handler = {
-        .refresh_callback = refresh_callback,
-        .timer_callback = timer_callback,
         .blocks = blocks,
     };
     return handler;
@@ -38,8 +31,8 @@ int signal_handler_init(signal_handler *const handler) {
 
     for (unsigned short i = 0; i < handler->blocks.length; ++i) {
         const block *const block = &handler->blocks.values[i];
-        if (block->signal > 0) {
-            if (sigaddset(&set, SIGRTMIN + block->signal) != 0) {
+        if (block->event_id > 0) {
+            if (sigaddset(&set, SIGRTMIN + block->event_id) != 0) {
                 (void)fprintf(
                     stderr,
                     "error: invalid or unsupported signal specified for "
@@ -77,35 +70,12 @@ int signal_handler_deinit(signal_handler *const handler) {
     return 0;
 }
 
-int signal_handler_process(signal_handler *const handler, timer *const timer) {
+int signal_handler_read(signal_handler *const handler) {
     signal_info info;
     const ssize_t bytes_read = read(handler->fd, &info, sizeof(info));
     if (bytes_read == -1) {
         (void)fprintf(stderr, "error: could not read info of incoming signal");
         return 1;
     }
-
-    const int signal = (int)info.ssi_signo;
-    switch (signal) {
-        case TIMER_SIGNAL:
-            if (handler->timer_callback(handler->blocks, timer) != 0) {
-                return 1;
-            }
-            return 0;
-        case SIGTERM:
-            // fall through
-        case SIGINT:
-            return 1;
-    }
-
-    for (unsigned short i = 0; i < handler->blocks.length; ++i) {
-        block *const block = &handler->blocks.values[i];
-        if (block->signal == signal - SIGRTMIN) {
-            const uint8_t button = (uint8_t)info.ssi_int;
-            block_execute(block, button);
-            break;
-        }
-    }
-
-    return 0;
+    return (int)info.ssi_signo;
 }

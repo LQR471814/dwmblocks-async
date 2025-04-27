@@ -49,6 +49,7 @@ int timer_arm(timer *const timer) {
     return 0;
 }
 
+// checks if a block has to be run according to the current time
 bool timer_must_run_block(const timer *const timer, const block *const block) {
     if (timer == NULL || timer->time == timer->reset_value) {
         return true;

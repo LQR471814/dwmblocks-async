@@ -14,12 +14,12 @@
 #include "util.h"
 
 block block_new(const char *const icon, const char *const command,
-                const unsigned int interval, const int signal) {
+                const unsigned int interval, const int event_id) {
     block block = {
         .icon = icon,
         .command = command,
         .interval = interval,
-        .signal = signal,
+        .event_id = event_id,
 
         .output = {[0] = '\0'},
         .fork_pid = -1,
