@@ -145,7 +145,8 @@ relevant event, rather than have it rerun idly.
 > service as a kill signal, there is no way around this except to
 > avoid sending system signals to systemd service.
 
-For example, the volume block has the update signal of `1`. I run 
+For example, the volume block has the update signal of `1`. I
+would run
 
 ```sh
 echo "\x01" | socat -u - UNIX-SENDTO:/tmp/dwmblocks

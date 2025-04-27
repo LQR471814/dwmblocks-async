@@ -17,9 +17,11 @@
 #define TRAILING_DELIMITER 0
 
 // Define blocks for the status feed as X(icon, cmd, interval, event_id).
+// Note: event_id with a value of 0 would indicate that the block should
+// not receive any events.
 #define BLOCKS(X)                  \
     X("", "bar-network", 5,    0)  \
-    X("", "bar-sound",   1800, 1) \
+    X("", "bar-sound",   1800, 1)  \
     X("", "bar-battery", 5,    0)  \
     X("", "bar-date",    1,    0)
 
